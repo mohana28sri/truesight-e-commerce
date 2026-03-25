@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { ShieldCheck, Mail, Phone, MapPin } from "lucide-react";
+import { categoryGroups } from "@/data/products";
 
 const Footer = () => (
   <footer className="bg-primary text-primary-foreground mt-20">
@@ -15,10 +16,11 @@ const Footer = () => (
         <div>
           <h4 className="font-display font-semibold mb-4">Shop</h4>
           <div className="space-y-2 text-sm text-primary-foreground/70">
-            <Link to="/products?category=womens-wear" className="block hover:text-primary-foreground transition-colors">Women's Wear</Link>
-            <Link to="/products?category=mens-wear" className="block hover:text-primary-foreground transition-colors">Men's Wear</Link>
-            <Link to="/products?category=shoes" className="block hover:text-primary-foreground transition-colors">Shoes</Link>
-            <Link to="/products?category=watches" className="block hover:text-primary-foreground transition-colors">Watches</Link>
+            {categoryGroups.flatMap((g) => g.subcategories).slice(0, 6).map((sub) => (
+              <Link key={sub.id} to={`/products?subcategory=${sub.id}`} className="block hover:text-primary-foreground transition-colors">
+                {sub.name}
+              </Link>
+            ))}
           </div>
         </div>
         <div>
