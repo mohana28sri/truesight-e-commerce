@@ -4,11 +4,12 @@ import { ShieldCheck, ArrowRight, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import ProductCard from "@/components/ProductCard";
 import TrustBadge from "@/components/TrustBadge";
-import { products, categories } from "@/data/products";
+import { products, categoryGroups } from "@/data/products";
 
 const Index = () => {
-  const featured = products.slice(0, 4);
-  const trending = products.slice(4, 8);
+  const featured = products.filter((p) => p.rating >= 4.7).slice(0, 4);
+  const trending = products.filter((p) => p.tags.includes("Trending") || p.tags.includes("Bestseller")).slice(0, 8);
+  const allSubs = categoryGroups.flatMap((g) => g.subcategories);
 
   return (
     <div className="min-h-screen">
@@ -54,7 +55,7 @@ const Index = () => {
                   Shop Now <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               </Link>
-              <Link to="/products?category=watches">
+              <Link to="/products?subcategory=watches">
                 <Button size="lg" variant="outline" className="border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10 font-body">
                   Explore Collections
                 </Button>
@@ -64,29 +65,27 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Trust badges */}
       <TrustBadge />
 
       {/* Categories */}
       <section className="py-16">
         <div className="container mx-auto px-4">
           <h2 className="font-display text-2xl sm:text-3xl font-bold text-foreground mb-8">Shop by Category</h2>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
-            {categories.map((cat, i) => (
+          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-4">
+            {allSubs.map((sub, i) => (
               <motion.div
-                key={cat.id}
+                key={sub.id}
                 initial={{ opacity: 0, scale: 0.9 }}
                 whileInView={{ opacity: 1, scale: 1 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.05 }}
               >
                 <Link
-                  to={`/products?category=${cat.id}`}
-                  className="block bg-card p-6 rounded-xl shadow-card hover:shadow-card-hover transition-all text-center group"
+                  to={`/products?subcategory=${sub.id}`}
+                  className="block bg-card p-5 rounded-xl shadow-card hover:shadow-card-hover transition-all text-center group"
                 >
-                  <span className="text-3xl block mb-3">{cat.icon}</span>
-                  <span className="font-body font-medium text-sm text-foreground group-hover:text-accent transition-colors">{cat.name}</span>
-                  <span className="block text-xs text-muted-foreground mt-1">{cat.count} Products</span>
+                  <span className="text-3xl block mb-2">{sub.icon}</span>
+                  <span className="font-body font-medium text-sm text-foreground group-hover:text-accent transition-colors">{sub.name}</span>
                 </Link>
               </motion.div>
             ))}
@@ -94,7 +93,7 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Featured Products */}
+      {/* Featured */}
       <section className="py-16 bg-secondary">
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between mb-8">
@@ -138,7 +137,7 @@ const Index = () => {
         <div className="container mx-auto px-4">
           <h2 className="font-display text-2xl sm:text-3xl font-bold text-foreground mb-8">Trending Now</h2>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-            {trending.map((p) => (
+            {trending.slice(0, 4).map((p) => (
               <ProductCard key={p.id} product={p} />
             ))}
           </div>

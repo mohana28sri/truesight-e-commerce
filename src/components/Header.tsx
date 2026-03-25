@@ -1,17 +1,17 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ShoppingCart, Heart, User, Search, Menu, X, ShieldCheck } from "lucide-react";
+import { ShoppingCart, Heart, User, Search, ShieldCheck, Menu } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { categories } from "@/data/products";
+import { useSidebar } from "@/components/ui/sidebar";
 
 const Header = () => {
   const { totalItems, wishlist } = useCart();
   const { user, logout } = useAuth();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { toggleSidebar } = useSidebar();
   const [searchQuery, setSearchQuery] = useState("");
   const navigate = useNavigate();
 
@@ -24,7 +24,7 @@ const Header = () => {
   };
 
   return (
-    <header className="sticky top-0 z-50 bg-card/95 backdrop-blur-md border-b">
+    <header className="sticky top-0 z-40 bg-card/95 backdrop-blur-md border-b">
       {/* Top bar */}
       <div className="hero-gradient text-primary-foreground">
         <div className="container mx-auto px-4 py-1.5 flex items-center justify-center gap-2 text-xs sm:text-sm">
@@ -36,11 +36,16 @@ const Header = () => {
       {/* Main header */}
       <div className="container mx-auto px-4 py-3">
         <div className="flex items-center justify-between gap-4">
-          {/* Logo */}
-          <Link to="/" className="flex items-center gap-2 shrink-0">
-            <ShieldCheck className="h-7 w-7 text-accent" />
-            <span className="font-display text-xl sm:text-2xl font-bold text-foreground">TrustCart</span>
-          </Link>
+          {/* Hamburger + Logo */}
+          <div className="flex items-center gap-2 shrink-0">
+            <Button variant="ghost" size="icon" onClick={toggleSidebar} className="hover:bg-secondary">
+              <Menu className="h-5 w-5" />
+            </Button>
+            <Link to="/" className="flex items-center gap-2">
+              <ShieldCheck className="h-7 w-7 text-accent" />
+              <span className="font-display text-xl sm:text-2xl font-bold text-foreground">TrustCart</span>
+            </Link>
+          </div>
 
           {/* Search - desktop */}
           <form onSubmit={handleSearch} className="hidden md:flex flex-1 max-w-lg">
@@ -89,63 +94,17 @@ const Header = () => {
                 </Button>
               </Link>
             )}
-            <button className="md:hidden p-2" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
-              {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-            </button>
           </div>
         </div>
 
-        {/* Category nav - desktop */}
-        <nav className="hidden md:flex items-center gap-6 mt-3 text-sm">
-          {categories.map((cat) => (
-            <Link
-              key={cat.id}
-              to={`/products?category=${cat.id}`}
-              className="text-muted-foreground hover:text-foreground transition-colors whitespace-nowrap"
-            >
-              {cat.name}
-            </Link>
-          ))}
-        </nav>
+        {/* Mobile search */}
+        <form onSubmit={handleSearch} className="md:hidden mt-3">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input placeholder="Search products..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-10 bg-secondary border-0" />
+          </div>
+        </form>
       </div>
-
-      {/* Mobile menu */}
-      {mobileMenuOpen && (
-        <div className="md:hidden border-t bg-card">
-          <div className="container mx-auto px-4 py-4 space-y-4">
-            <form onSubmit={handleSearch}>
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input placeholder="Search..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-10 bg-secondary border-0" />
-              </div>
-            </form>
-            <div className="grid grid-cols-2 gap-2">
-              {categories.map((cat) => (
-                <Link
-                  key={cat.id}
-                  to={`/products?category=${cat.id}`}
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="p-3 bg-secondary rounded-lg text-sm hover:bg-muted transition-colors"
-                >
-                  {cat.icon} {cat.name}
-                </Link>
-              ))}
-            </div>
-            {user ? (
-              <div className="flex gap-2">
-                <Link to="/account" className="flex-1" onClick={() => setMobileMenuOpen(false)}>
-                  <Button variant="outline" className="w-full">Account</Button>
-                </Link>
-                <Button variant="ghost" onClick={() => { logout(); setMobileMenuOpen(false); }} className="flex-1">Logout</Button>
-              </div>
-            ) : (
-              <Link to="/login" onClick={() => setMobileMenuOpen(false)}>
-                <Button className="w-full">Sign In</Button>
-              </Link>
-            )}
-          </div>
-        </div>
-      )}
     </header>
   );
 };
