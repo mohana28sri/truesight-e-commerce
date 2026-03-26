@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { ShieldCheck, CreditCard } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
+import { fetchApi } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,15 +16,42 @@ const Checkout = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
 
-  const handleOrder = (e: React.FormEvent) => {
+  const handleOrder = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!user) {
+      toast({ title: "Login Required", description: "Please login to place an order.", variant: "destructive" });
+      navigate("/login");
+      return;
+    }
+
     setLoading(true);
-    setTimeout(() => {
+    
+    // Extract form data
+    const formData = new FormData(e.target as HTMLFormElement);
+    const shippingAddress = [
+      formData.get("address"),
+      formData.get("city"),
+      formData.get("pincode")
+    ].filter(Boolean).join(", ");
+
+    try {
+      await fetchApi("/orders", {
+        method: "POST",
+        body: JSON.stringify({
+          shippingAddress,
+          paymentId: "pay_" + Math.random().toString(36).substring(2, 9)
+        })
+      });
+
       clearCart();
       toast({ title: "Order Placed! 🎉", description: "Your verified products are on the way." });
-      navigate("/");
+      navigate("/orders");
+    } catch (err) {
+      console.error(err);
+      toast({ title: "Checkout Failed", description: "There was an error placing your order.", variant: "destructive" });
+    } finally {
       setLoading(false);
-    }, 1500);
+    }
   };
 
   if (items.length === 0) {
@@ -42,13 +70,13 @@ const Checkout = () => {
             <div>
               <h2 className="font-display font-semibold text-foreground mb-4">Shipping Details</h2>
               <div className="space-y-3">
-                <div><Label>Full Name</Label><Input required defaultValue={user?.name} /></div>
-                <div><Label>Email</Label><Input type="email" required defaultValue={user?.email} /></div>
-                <div><Label>Phone</Label><Input type="tel" required placeholder="+91" /></div>
-                <div><Label>Address</Label><Input required placeholder="Street address" /></div>
+                <div><Label>Full Name</Label><Input name="name" required defaultValue={user?.name} /></div>
+                <div><Label>Email</Label><Input name="email" type="email" required defaultValue={user?.email} /></div>
+                <div><Label>Phone</Label><Input name="phone" type="tel" required placeholder="+91" /></div>
+                <div><Label>Address</Label><Input name="address" required placeholder="Street address" /></div>
                 <div className="grid grid-cols-2 gap-3">
-                  <div><Label>City</Label><Input required /></div>
-                  <div><Label>PIN Code</Label><Input required /></div>
+                  <div><Label>City</Label><Input name="city" required /></div>
+                  <div><Label>PIN Code</Label><Input name="pincode" required /></div>
                 </div>
               </div>
             </div>

@@ -1,20 +1,74 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { ShieldCheck, Star, Heart, ShoppingCart, Minus, Plus, ZoomIn, ChevronLeft, RotateCcw, Truck, Award } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { products, reviews } from "@/data/products";
+import { Product, Review } from "@/data/products";
 import { useCart } from "@/context/CartContext";
+import { useAuth } from "@/context/AuthContext";
+import { fetchApi } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { Textarea } from "@/components/ui/textarea";
 
 const ProductDetail = () => {
   const { id } = useParams();
-  const product = products.find((p) => p.id === id);
+  const [product, setProduct] = useState<Product | null>(null);
+  const [productReviews, setProductReviews] = useState<Review[]>([]);
+  const [related, setRelated] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+  
   const { addToCart, toggleWishlist, isInWishlist } = useCart();
+  const { user } = useAuth();
   const [selectedImage, setSelectedImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [zoomed, setZoomed] = useState(false);
+
+  const [rating, setRating] = useState(5);
+  const [comment, setComment] = useState("");
+  const [submittingReview, setSubmittingReview] = useState(false);
+
+  useEffect(() => {
+    if (id) {
+      setLoading(true);
+      fetchApi(`/products/${id}`)
+        .then(data => {
+          if (data && data.product) {
+            setProduct(data.product);
+            setProductReviews(data.reviews || []);
+            setRelated(data.related || []);
+          }
+        })
+        .catch(console.error)
+        .finally(() => setLoading(false));
+    }
+  }, [id]);
+
+  const submitReview = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user) return;
+    setSubmittingReview(true);
+    try {
+      const data = await fetchApi(`/reviews/${id}`, {
+        method: "POST",
+        body: JSON.stringify({ rating, comment })
+      });
+      if (data && data.reviews) {
+        setProductReviews(data.reviews);
+        setComment("");
+        // Reload product to get updated avg rating
+        fetchApi(`/products/${id}`).then(d => d && setProduct(d.product));
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setSubmittingReview(false);
+    }
+  };
+
+  if (loading) {
+    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+  }
 
   if (!product) {
     return (
@@ -26,8 +80,6 @@ const ProductDetail = () => {
       </div>
     );
   }
-
-  const productReviews = reviews.filter((r) => r.productId === product.id);
 
   return (
     <div className="min-h-screen py-8">
@@ -147,6 +199,20 @@ const ProductDetail = () => {
 
             <Separator />
 
+            {/* Stock + Delivery */}
+            <div className="space-y-2 text-sm">
+              <p className="text-destructive font-medium flex items-center gap-1.5">
+                <span className="inline-block w-2 h-2 bg-destructive rounded-full animate-pulse" />
+                Only {((product.id.charCodeAt(0) % 5) + 2)} left in stock — order soon!
+              </p>
+              <p className="text-muted-foreground flex items-center gap-1.5">
+                <Truck className="h-4 w-4 text-accent" />
+                Estimated delivery: <strong className="text-foreground ml-1">3–5 business days</strong>
+              </p>
+            </div>
+
+            <Separator />
+
             {/* Trust features */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               {[
@@ -167,35 +233,72 @@ const ProductDetail = () => {
         </div>
 
         {/* Reviews */}
-        <section className="mt-16">
-          <h2 className="font-display text-2xl font-bold text-foreground mb-6">Customer Reviews</h2>
-          {productReviews.length > 0 ? (
-            <div className="space-y-4 max-w-2xl">
-              {productReviews.map((r) => (
-                <div key={r.id} className="bg-card p-6 rounded-xl shadow-card">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium text-sm text-foreground">{r.userName}</span>
-                      {r.verified && (
-                        <Badge variant="secondary" className="text-[10px]">
-                          <ShieldCheck className="h-3 w-3 mr-1" /> Verified Purchase
-                        </Badge>
-                      )}
+        <section className="mt-16 grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-2">
+            <h2 className="font-display text-2xl font-bold text-foreground mb-6">Customer Reviews</h2>
+            {productReviews.length > 0 ? (
+              <div className="space-y-4">
+                {productReviews.map((r) => (
+                  <div key={r.id} className="bg-card p-6 rounded-xl shadow-card">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium text-sm text-foreground">{(r as any).user_name || r.userName}</span>
+                        {r.verified ? (
+                          <Badge variant="secondary" className="text-[10px]">
+                            <ShieldCheck className="h-3 w-3 mr-1" /> Verified Purchase
+                          </Badge>
+                        ) : null}
+                      </div>
+                      <span className="text-xs text-muted-foreground">{r.date}</span>
                     </div>
-                    <span className="text-xs text-muted-foreground">{r.date}</span>
+                    <div className="flex items-center gap-0.5 mb-2">
+                      {[...Array(5)].map((_, i) => (
+                        <Star key={i} className={`h-3.5 w-3.5 ${i < r.rating ? "fill-gold text-gold" : "text-muted"}`} />
+                      ))}
+                    </div>
+                    <p className="text-sm text-muted-foreground">{r.comment}</p>
                   </div>
-                  <div className="flex items-center gap-0.5 mb-2">
-                    {[...Array(5)].map((_, i) => (
-                      <Star key={i} className={`h-3.5 w-3.5 ${i < r.rating ? "fill-gold text-gold" : "text-muted"}`} />
+                ))}
+              </div>
+            ) : (
+              <p className="text-muted-foreground">No reviews yet for this product.</p>
+            )}
+          </div>
+
+          <div>
+            <h2 className="font-display text-2xl font-bold text-foreground mb-6">Write a Review</h2>
+            {user ? (
+              <form onSubmit={submitReview} className="space-y-4 bg-card p-6 rounded-xl shadow-card">
+                <div>
+                  <label className="text-sm font-medium mb-1 block">Rating</label>
+                  <div className="flex gap-1">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <button type="button" key={star} onClick={() => setRating(star)}>
+                        <Star className={`h-6 w-6 ${star <= rating ? "fill-gold text-gold" : "text-muted"}`} />
+                      </button>
                     ))}
                   </div>
-                  <p className="text-sm text-muted-foreground">{r.comment}</p>
                 </div>
-              ))}
-            </div>
-          ) : (
-            <p className="text-muted-foreground">No reviews yet for this product.</p>
-          )}
+                <div>
+                  <label className="text-sm font-medium mb-1 block">Review</label>
+                  <Textarea
+                    placeholder="What did you like or dislike?"
+                    value={comment}
+                    onChange={(e) => setComment(e.target.value)}
+                    required
+                  />
+                </div>
+                <Button type="submit" className="w-full bg-accent hover:bg-accent/90" disabled={submittingReview}>
+                  {submittingReview ? "Submitting..." : "Submit Review"}
+                </Button>
+              </form>
+            ) : (
+              <div className="bg-card p-6 rounded-xl shadow-card text-center">
+                <p className="text-muted-foreground mb-4">Please log in to write a review.</p>
+                <Link to="/login"><Button variant="outline">Log in</Button></Link>
+              </div>
+            )}
+          </div>
         </section>
       </div>
     </div>

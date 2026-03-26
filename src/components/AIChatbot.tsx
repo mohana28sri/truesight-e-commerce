@@ -14,8 +14,10 @@ interface Message {
 
 const quickQueries = [
   "Show me kurtis under ₹1000",
-  "Best rated watches",
-  "Men's shirts on sale",
+  "Best rated sneakers",
+  "Sarees for weddings",
+  "Skincare under ₹1000",
+  "Men's hoodies on sale",
   "Recommend accessories for gifting",
 ];
 
@@ -43,7 +45,7 @@ function processQuery(query: string): string {
 
   // Category-based
   const subcat = allSubcategories.find(
-    (s) => q.includes(s.name.toLowerCase()) || q.includes(s.id)
+    (s) => q.includes(s.name.toLowerCase()) || q.includes(s.id.toLowerCase()) || q.includes(s.id.replace("-", " "))
   );
   if (subcat) {
     const catProducts = products.filter((p) => p.subcategory === subcat.id);
@@ -98,7 +100,7 @@ function processQuery(query: string): string {
 
   // Availability
   if (q.includes("available") || q.includes("stock") || q.includes("availability")) {
-    return "All products listed on TrustCart are currently in stock! We update availability in real-time. Every item is authenticity-verified before shipping. 🛡️";
+    return "All products listed on Zenvique are currently in stock! We update availability in real-time. Every item is authenticity-verified before shipping. 🛡️";
   }
 
   // Return / refund
@@ -127,7 +129,7 @@ function processQuery(query: string): string {
     return `I found ${matched.length} matching products:\n\n${top.map((p) => `• **${p.name}** — ₹${p.price.toLocaleString()} ⭐${p.rating}`).join("\n")}\n\n${matched.length > 5 ? "Browse the Products page for more!" : ""}`;
   }
 
-  return "I'm your TrustCart shopping assistant! 🛍️ I can help you:\n\n• Find products by category or price (e.g., \"kurtis under ₹1000\")\n• Show top-rated items\n• Check deals and discounts\n• Answer questions about shipping, returns, and more\n\nWhat are you looking for today?";
+  return "I'm your Zenvique shopping assistant! 🛍️ I can help you:\n\n• Find products by category or price (e.g., \"kurtis under ₹1000\")\n• Show top-rated items\n• Check deals and discounts\n• Answer questions about shipping, returns, and more\n\nWhat are you looking for today?";
 }
 
 const AIChatbot = () => {
@@ -136,7 +138,7 @@ const AIChatbot = () => {
     {
       id: "welcome",
       role: "assistant",
-      content: "Hi! 👋 I'm your TrustCart shopping assistant. Ask me anything — find products, check prices, or get recommendations!",
+      content: "Hi! 👋 I'm your Zenvique shopping assistant. Ask me anything — find products, check prices, or get recommendations!",
     },
   ]);
   const [input, setInput] = useState("");
@@ -218,7 +220,7 @@ const AIChatbot = () => {
                 <Sparkles className="h-4 w-4" />
               </div>
               <div>
-                <h3 className="font-display font-semibold text-sm">TrustCart AI Assistant</h3>
+                <h3 className="font-display font-semibold text-sm">Zenvique AI Assistant</h3>
                 <p className="text-[10px] text-primary-foreground/70">Ask me anything about our products</p>
               </div>
             </div>

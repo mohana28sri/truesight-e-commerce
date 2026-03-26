@@ -1,13 +1,45 @@
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Heart } from "lucide-react";
 import ProductCard from "@/components/ProductCard";
-import { useCart } from "@/context/CartContext";
-import { products } from "@/data/products";
+import { Product } from "@/data/products";
 import { Button } from "@/components/ui/button";
+import { useCart } from "@/context/CartContext";
+import { useAuth } from "@/context/AuthContext";
+import { fetchApi } from "@/lib/api";
 
 const Wishlist = () => {
   const { wishlist } = useCart();
-  const wishlistProducts = products.filter((p) => wishlist.includes(p.id));
+  const { user } = useAuth();
+  const [wishlistProducts, setWishlistProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (wishlist.length === 0) {
+      setWishlistProducts([]);
+      setLoading(false);
+      return;
+    }
+
+    // Best approach: fetch products matching wishlist IDs
+    // Assuming backend /api/products can take ?search= or we fetch all and filter
+    const params = new URLSearchParams();
+    params.append("limit", "100");
+    
+    setLoading(true);
+    fetchApi(`/products?${params.toString()}`)
+      .then(data => {
+        if (data && data.products) {
+          setWishlistProducts(data.products.filter((p: Product) => wishlist.includes(p.id)));
+        }
+      })
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, [wishlist]);
+
+  if (loading) {
+    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+  }
 
   if (wishlistProducts.length === 0) {
     return (
@@ -15,7 +47,7 @@ const Wishlist = () => {
         <div className="text-center space-y-4">
           <Heart className="h-16 w-16 mx-auto text-muted-foreground/30" />
           <h2 className="font-display text-2xl font-bold text-foreground">Your wishlist is empty</h2>
-          <p className="text-muted-foreground">Save items you love for later!</p>
+          <p className="text-muted-foreground">{!user ? "Login to save items across devices." : "Save items you love for later!"}</p>
           <Link to="/products"><Button>Browse Products</Button></Link>
         </div>
       </div>

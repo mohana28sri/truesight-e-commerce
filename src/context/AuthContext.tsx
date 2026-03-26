@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState, ReactNode } from "react";
+import React, { createContext, useContext, useState, ReactNode, useEffect } from "react";
+import { fetchApi } from "@/lib/api";
 
 interface User {
   id: string;
@@ -9,8 +10,9 @@ interface User {
 
 interface AuthContextType {
   user: User | null;
-  login: (email: string, password: string) => boolean;
-  signup: (name: string, email: string, password: string) => boolean;
+  loading: boolean;
+  login: (email: string, password: string) => Promise<boolean>;
+  signup: (name: string, email: string, password: string) => Promise<boolean>;
   logout: () => void;
   isAdmin: boolean;
 }
@@ -18,38 +20,70 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<User | null>(() => {
-    const saved = localStorage.getItem("trustcart-user");
-    return saved ? JSON.parse(saved) : null;
-  });
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  const login = (email: string, _password: string) => {
-    // Mock login
-    const mockUser: User = {
-      id: "1",
-      name: email.split("@")[0],
-      email,
-      role: email.includes("admin") ? "admin" : "user",
-    };
-    setUser(mockUser);
-    localStorage.setItem("trustcart-user", JSON.stringify(mockUser));
-    return true;
+  useEffect(() => {
+    // Check if token exists, then load user
+    const token = localStorage.getItem("zenvique-token");
+    if (token) {
+      fetchApi("/auth/me")
+        .then((data) => {
+          if (data && data.user) {
+            setUser(data.user);
+            localStorage.setItem("zenvique-user", JSON.stringify(data.user));
+          }
+        })
+        .catch(() => {
+          localStorage.removeItem("zenvique-token");
+          localStorage.removeItem("zenvique-user");
+        })
+        .finally(() => setLoading(false));
+    } else {
+      setLoading(false);
+    }
+  }, []);
+
+  const login = async (email: string, password: string) => {
+    try {
+      const data = await fetchApi("/auth/login", {
+        method: "POST",
+        body: JSON.stringify({ email, password }),
+      });
+      setUser(data.user);
+      localStorage.setItem("zenvique-user", JSON.stringify(data.user));
+      localStorage.setItem("zenvique-token", data.token);
+      return true;
+    } catch (err) {
+      console.error(err);
+      return false;
+    }
   };
 
-  const signup = (name: string, email: string, _password: string) => {
-    const mockUser: User = { id: Date.now().toString(), name, email, role: "user" };
-    setUser(mockUser);
-    localStorage.setItem("trustcart-user", JSON.stringify(mockUser));
-    return true;
+  const signup = async (name: string, email: string, password: string) => {
+    try {
+      const data = await fetchApi("/auth/signup", {
+        method: "POST",
+        body: JSON.stringify({ name, email, password }),
+      });
+      setUser(data.user);
+      localStorage.setItem("zenvique-user", JSON.stringify(data.user));
+      localStorage.setItem("zenvique-token", data.token);
+      return true;
+    } catch (err) {
+      console.error(err);
+      return false;
+    }
   };
 
   const logout = () => {
     setUser(null);
-    localStorage.removeItem("trustcart-user");
+    localStorage.removeItem("zenvique-user");
+    localStorage.removeItem("zenvique-token");
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, signup, logout, isAdmin: user?.role === "admin" }}>
+    <AuthContext.Provider value={{ user, loading, login, signup, logout, isAdmin: user?.role === "admin" }}>
       {children}
     </AuthContext.Provider>
   );

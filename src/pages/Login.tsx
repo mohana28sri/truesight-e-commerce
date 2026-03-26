@@ -19,7 +19,7 @@ const Login = () => {
     e.preventDefault();
     if (isSignup) {
       signup(name, email, password);
-      toast({ title: "Account created!", description: "Welcome to TrustCart." });
+      toast({ title: "Account created!", description: "Welcome to Zenvique." });
     } else {
       login(email, password);
       toast({ title: "Welcome back!", description: "You're now signed in." });
@@ -33,7 +33,7 @@ const Login = () => {
         <div className="text-center">
           <div className="flex items-center justify-center gap-2 mb-4">
             <ShieldCheck className="h-8 w-8 text-accent" />
-            <span className="font-display text-2xl font-bold text-foreground">TrustCart</span>
+            <span className="font-display text-2xl font-bold text-foreground">Zenvique</span>
           </div>
           <h1 className="font-display text-2xl font-bold text-foreground">{isSignup ? "Create Account" : "Welcome Back"}</h1>
           <p className="text-muted-foreground text-sm mt-1">

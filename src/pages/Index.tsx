@@ -1,14 +1,26 @@
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ShieldCheck, ArrowRight, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import ProductCard from "@/components/ProductCard";
 import TrustBadge from "@/components/TrustBadge";
-import { products, categoryGroups } from "@/data/products";
+import { Product, categoryGroups } from "@/data/products";
+import { fetchApi } from "@/lib/api";
 
 const Index = () => {
-  const featured = products.filter((p) => p.rating >= 4.7).slice(0, 4);
-  const trending = products.filter((p) => p.tags.includes("Trending") || p.tags.includes("Bestseller")).slice(0, 8);
+  const [featured, setFeatured] = useState<Product[]>([]);
+  const [trending, setTrending] = useState<Product[]>([]);
+  
+  useEffect(() => {
+    fetchApi("/products/featured").then(data => {
+      if (data) {
+        setFeatured(data.topRated || []);
+        setTrending(data.trending || []);
+      }
+    }).catch(console.error);
+  }, []);
+
   const allSubs = categoryGroups.flatMap((g) => g.subcategories);
 
   return (

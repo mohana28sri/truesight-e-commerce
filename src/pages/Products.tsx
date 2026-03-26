@@ -1,42 +1,47 @@
-import { useMemo, useState } from "react";
+import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { SlidersHorizontal } from "lucide-react";
 import ProductCard from "@/components/ProductCard";
-import { products, allSubcategories } from "@/data/products";
+import { Product, allSubcategories } from "@/data/products";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { fetchApi } from "@/lib/api";
 
 const Products = () => {
   const [searchParams] = useSearchParams();
   const subcategoryFilter = searchParams.get("subcategory") || "";
   const searchQuery = searchParams.get("search") || "";
-  const [sortBy, setSortBy] = useState("featured");
+  const [sortBy, setSortBy] = useState("review_count");
   const [showFilters, setShowFilters] = useState(false);
   const [selectedSubcategory, setSelectedSubcategory] = useState(subcategoryFilter);
+  const [filtered, setFiltered] = useState<Product[]>([]);
+  const [total, setTotal] = useState(0);
 
   // Sync URL param changes
-  useMemo(() => {
+  useEffect(() => {
     setSelectedSubcategory(subcategoryFilter);
   }, [subcategoryFilter]);
 
-  const filtered = useMemo(() => {
-    let result = [...products];
-    if (selectedSubcategory) result = result.filter((p) => p.subcategory === selectedSubcategory);
-    if (searchQuery) {
-      const q = searchQuery.toLowerCase();
-      result = result.filter(
-        (p) =>
-          p.name.toLowerCase().includes(q) ||
-          p.description.toLowerCase().includes(q) ||
-          p.tags.some((t) => t.toLowerCase().includes(q))
-      );
+  // Fetch from API when filters change
+  useEffect(() => {
+    const params = new URLSearchParams();
+    if (selectedSubcategory) params.append("subcategory", selectedSubcategory);
+    if (searchQuery) params.append("search", searchQuery);
+    if (sortBy) {
+      if (sortBy === 'price-low') params.append("sort", "price_asc");
+      else if (sortBy === 'price-high') params.append("sort", "price_desc");
+      else if (sortBy === 'rating') params.append("sort", "rating");
     }
-    switch (sortBy) {
-      case "price-low": result.sort((a, b) => a.price - b.price); break;
-      case "price-high": result.sort((a, b) => b.price - a.price); break;
-      case "rating": result.sort((a, b) => b.rating - a.rating); break;
-    }
-    return result;
+    params.append("limit", "100"); // Load generous amount since frontend doesn't have pagination UI yet
+
+    fetchApi(`/products?${params.toString()}`)
+      .then(data => {
+        if (data && data.products) {
+          setFiltered(data.products);
+          setTotal(data.total);
+        }
+      })
+      .catch(console.error);
   }, [selectedSubcategory, searchQuery, sortBy]);
 
   const activeSubcategory = allSubcategories.find((s) => s.id === selectedSubcategory);

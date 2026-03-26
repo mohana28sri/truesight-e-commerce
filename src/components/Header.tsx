@@ -43,7 +43,7 @@ const Header = () => {
             </Button>
             <Link to="/" className="flex items-center gap-2">
               <ShieldCheck className="h-7 w-7 text-accent" />
-              <span className="font-display text-xl sm:text-2xl font-bold text-foreground">TrustCart</span>
+              <span className="font-display text-xl sm:text-2xl font-bold text-foreground">Zenvique</span>
             </Link>
           </div>
 

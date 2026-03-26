@@ -1,11 +1,11 @@
-import { ShieldCheck, RotateCcw, Eye, Award } from "lucide-react";
+import { ShieldCheck, RotateCcw, Truck, Lock } from "lucide-react";
 import { motion } from "framer-motion";
 
 const features = [
-  { icon: ShieldCheck, title: "Authenticity Verified", desc: "Every product is verified before shipping" },
-  { icon: Eye, title: "What You See Is What You Get", desc: "High-res images of the exact product" },
-  { icon: RotateCcw, title: "Easy Returns", desc: "Return if product doesn't match listing" },
-  { icon: Award, title: "Premium Quality", desc: "Only curated, top-quality products" },
+  { icon: Lock, title: "100% Secure Payments", desc: "SSL encrypted checkout with trusted payment gateways" },
+  { icon: RotateCcw, title: "Easy Returns", desc: "7-day hassle-free returns. No questions asked." },
+  { icon: Truck, title: "Fast Delivery", desc: "3–5 business day delivery across India" },
+  { icon: ShieldCheck, title: "Authenticity Guaranteed", desc: "Every product is verified before it ships to you" },
 ];
 
 const TrustBadge = () => (
