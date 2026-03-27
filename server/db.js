@@ -1,6 +1,9 @@
-const Database = require('better-sqlite3');
-const path = require('path');
-const fs = require('fs');
+import Database from 'better-sqlite3';
+import path from 'path';
+import fs from 'fs';
+import { fileURLToPath } from 'node:url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // Allow environment variable override for persistent disks (e.g., Render)
 const dbPath = process.env.NODE_ENV === "production"
@@ -114,4 +117,4 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_orders_user ON orders(user_id);
 `);
 
-module.exports = db;
+export default db;

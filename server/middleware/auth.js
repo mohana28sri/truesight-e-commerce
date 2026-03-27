@@ -1,10 +1,10 @@
-const jwt = require('jsonwebtoken');
-const db = require('../db');
+import jwt from 'jsonwebtoken';
+import db from '../db.js';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'truesight-jwt-secret-change-in-production';
+export const JWT_SECRET = process.env.JWT_SECRET || 'truesight-jwt-secret-change-in-production';
 
 // Required auth - rejects if no token
-function requireAuth(req, res, next) {
+export function requireAuth(req, res, next) {
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
     return res.status(401).json({ error: 'Authentication required' });
@@ -25,7 +25,7 @@ function requireAuth(req, res, next) {
 }
 
 // Optional auth - attaches user if token present, continues either way
-function optionalAuth(req, res, next) {
+export function optionalAuth(req, res, next) {
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
     return next();
@@ -43,5 +43,3 @@ function optionalAuth(req, res, next) {
   }
   next();
 }
-
-module.exports = { requireAuth, optionalAuth, JWT_SECRET };

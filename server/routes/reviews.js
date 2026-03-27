@@ -1,6 +1,6 @@
-const express = require('express');
-const db = require('../db');
-const { requireAuth, optionalAuth } = require('../middleware/auth');
+import express from 'express';
+import db from '../db.js';
+import { requireAuth } from '../middleware/auth.js';
 
 const router = express.Router();
 
@@ -59,4 +59,4 @@ router.post('/:productId', requireAuth, (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;

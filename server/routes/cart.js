@@ -1,6 +1,6 @@
-const express = require('express');
-const db = require('../db');
-const { requireAuth } = require('../middleware/auth');
+import express from 'express';
+import db from '../db.js';
+import { requireAuth } from '../middleware/auth.js';
 
 const router = express.Router();
 
@@ -82,7 +82,7 @@ router.post('/', (req, res) => {
 });
 
 // PUT /api/cart/:productId
-router.put('/:productId', (req, res) => {
+router.get('/:productId', (req, res) => {
   try {
     const { quantity } = req.body;
     if (quantity == null || quantity < 0) {
@@ -150,4 +150,4 @@ router.post('/sync', (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;
