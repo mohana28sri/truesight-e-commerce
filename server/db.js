@@ -3,7 +3,9 @@ const path = require('path');
 const fs = require('fs');
 
 // Allow environment variable override for persistent disks (e.g., Render)
-const dbPath = process.env.DB_PATH || path.join(__dirname, 'database.sqlite');
+const dbPath = process.env.NODE_ENV === "production"
+  ? "/data/database.sqlite"
+  : process.env.DB_PATH || path.join(__dirname, 'database.sqlite');
 
 // Ensure the directory exists before initializing the database
 const dbDir = path.dirname(dbPath);
