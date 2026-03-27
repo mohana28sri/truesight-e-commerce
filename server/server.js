@@ -3,6 +3,7 @@ import path from "path";
 import fs from "fs";
 import { fileURLToPath } from 'node:url';
 import cors from 'cors';
+import helmet from 'helmet';
 
 // Import routes
 import authRoutes from './routes/auth.js';
@@ -16,18 +17,14 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Security Middleware
+app.use(helmet({
+  contentSecurityPolicy: false, // Disable CSP for easier development/deployment unless specifically needed
+}));
 app.use(cors({ origin: '*' }));
 app.use(express.json());
 
-// Serve static files from root 'dist' folder
-const distPath = path.join(__dirname, "../dist");
-app.use(express.static(distPath));
-
-// Debug check for Render logs
-console.log("Dist Path:", distPath);
-console.log("Index exists:", fs.existsSync(path.join(distPath, "index.html")));
-
-// API Routes
+// API Routes (Defined BEFORE static/fallback routes)
 app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/cart', cartRoutes);
@@ -39,6 +36,19 @@ app.use('/api/reviews', reviewRoutes);
 app.get("/api/test", (req, res) => {
   res.json({ message: "API working" });
 });
+
+// API 404 Handler (Should be after all API routes but before root routes)
+app.use('/api/*', (req, res) => {
+  res.status(404).json({ error: 'API route not found' });
+});
+
+// Serve static files from root 'dist' folder
+const distPath = path.join(__dirname, "../dist");
+app.use(express.static(distPath));
+
+// Debug check for Render logs
+console.log("Dist Path:", distPath);
+console.log("Index exists:", fs.existsSync(path.join(distPath, "index.html")));
 
 // SPA fallback (Express 5 correct syntax)
 app.get("/{*splat}", (req, res) => {

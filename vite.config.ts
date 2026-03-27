@@ -13,7 +13,7 @@ export default defineConfig(({ mode }) => ({
     },
     proxy: {
       '/api': {
-        target: 'http://localhost:3001',
+        target: 'http://localhost:3000',
         changeOrigin: true,
       }
     }
@@ -24,5 +24,17 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
     dedupe: ["react", "react-dom", "react/jsx-runtime", "react/jsx-dev-runtime"],
+  },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'vendor-react': ['react', 'react-dom', 'react-router-dom'],
+          'vendor-ui': ['@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu', '@radix-ui/react-toast', 'lucide-react'],
+          'vendor-utils': ['@tanstack/react-query', 'date-fns', 'zod', 'clsx', 'tailwind-merge'],
+        },
+      },
+    },
+    chunkSizeWarningLimit: 1000,
   },
 }));
