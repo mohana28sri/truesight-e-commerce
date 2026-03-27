@@ -1,8 +1,16 @@
 const Database = require('better-sqlite3');
 const path = require('path');
+const fs = require('fs');
 
 // Allow environment variable override for persistent disks (e.g., Render)
 const dbPath = process.env.DB_PATH || path.join(__dirname, 'database.sqlite');
+
+// Ensure the directory exists before initializing the database
+const dbDir = path.dirname(dbPath);
+if (!fs.existsSync(dbDir)) {
+  fs.mkdirSync(dbDir, { recursive: true });
+}
+
 const db = new Database(dbPath);
 
 // Enable WAL mode for better performance
