@@ -16,6 +16,7 @@ const Products = () => {
   const [selectedSubcategory, setSelectedSubcategory] = useState(subcategoryFilter);
   const [filtered, setFiltered] = useState<Product[]>([]);
   const [total, setTotal] = useState(0);
+  const [error, setError] = useState<string | null>(null);
 
   // Sync URL param changes
   useEffect(() => {
@@ -39,9 +40,13 @@ const Products = () => {
         if (data && data.products) {
           setFiltered(data.products);
           setTotal(data.total);
+          setError(null);
         }
       })
-      .catch(console.error);
+      .catch(err => {
+        console.error(err);
+        setError("Failed to connect to the server. Is the backend running?");
+      });
   }, [selectedSubcategory, searchQuery, sortBy]);
 
   const activeSubcategory = allSubcategories.find((s) => s.id === selectedSubcategory);
@@ -94,7 +99,15 @@ const Products = () => {
           </div>
         </div>
 
-        {filtered.length > 0 ? (
+        {error ? (
+          <div className="text-center py-20">
+            <p className="text-red-500 text-lg font-medium">{error}</p>
+            <p className="text-muted-foreground mt-2">Try running <code className="bg-secondary px-1 py-0.5 rounded">npm run dev</code> to start both frontend and backend.</p>
+            <Button variant="outline" className="mt-6" onClick={() => window.location.reload()}>
+              Retry Connection
+            </Button>
+          </div>
+        ) : filtered.length > 0 ? (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
             {filtered.map((p) => (
               <ProductCard key={p.id} product={p} />
